@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>YouDiet</title>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f5f0e8;
+    --paper-dark: #e8e0cc;
+    --ink: #2c1f0e;
+    --ink-light: #6b4f2e;
+    --ink-faded: #9b8060;
+    --green: #4a7c59;
+    --green-light: #6a9c79;
+    --green-dark: #2d5a3d;
+    --stain: rgba(139, 90, 43, 0.08);
+    --red-mark: #b94040;
+    --clip: #c0a060;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Libre Baskerville', serif;
+    background: #8b7355;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+
+  .device {
+    width: 100%;
+    max-width: 430px;
+    min-height: 100vh;
+    background: var(--paper);
+    position: relative;
+    overflow: hidden;
+    /* Paper texture */
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent: 27px,
+        rgba(139, 110, 60, 0.07) 27px,
+        rgba(139, 110, 60, 0.07) 28px
+      ),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    background-color: var(--paper);
+  }
+
+  /* Coffee stain decoration */
+  .device::before {
+    content: '';
+    position: absolute;
+    top: 80px;
+    right: -30px;
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(139,90,43,0.06) 0%, rgba(139,90,43,0.03) 60%, transparent 70%);
+    border: 2px solid rgba(139,90,43,0.08);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* HEADER — spiral binding top — FIJO */
+  .header {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    background: linear-gradient(180deg, #3d5c3d 0%, #4a7c59 60%, #3d6b4a 100%);
+    padding: 14px 20px 18px;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+    z-index: 50;
+  }
+
+  .header-spacer {
+    height: 118px;
+  }
+
+  /* Spiral holes */
+  .spirals {
+    display: flex;
+    gap: 18px;
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+
+  .spiral {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #888, #333 60%, #111);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.1);
+    position: relative;
+  }
+
+  .spiral::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: -5px;
+    right: -5px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(100,80,40,0.5), transparent);
+    transform: translateY(-50%);
+  }
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  .app-title {
+    font-family: 'Caveat', cursive;
+    font-size: 32px;
+    font-weight: 700;
+    color: #f5f0d0;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 0 20px rgba(200,255,150,0.1);
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+
+  .app-subtitle {
+    font-family: 'Caveat', cursive;
+    font-size: 13px;
+    color: rgba(245,240,208,0.6);
+    margin-top: 2px;
+  }
+
+  .header-date {
+    font-family: 'Caveat', cursive;
+    font-size: 14px;
+    color: rgba(245,240,208,0.75);
+    text-align: right;
+  }
+
+  .streak-badge {
+    background: rgba(255,220,80,0.2);
+    border: 1px solid rgba(255,220,80,0.4);
+    border-radius: 12px;
+    padding: 3px 10px;
+    font-family: 'Caveat', cursive;
+    font-size: 13px;
+    color: #ffd84a;
+    margin-top: 3px;
+    display: inline-block;
+  }
+
+  /* TAB BAR — estilo YouWallet */
+  .tab-bar {
+    display: flex;
+    background: #1a1a1f;
+    gap: 8px;
+    padding: 8px 10px 18px;
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 430px;
+    z-index: 100;
+    box-shadow: 0 -1px 0 rgba(255,255,255,0.07);
+  }
+
+  .tab {
+    flex: 1;
+    padding: 10px 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 10px;
+    background: linear-gradient(180deg, #7ab8e8 0%, #4a8fd4 50%, #3a7cc0 51%, #5a9de0 100%);
+    box-shadow:
+      0 2px 4px rgba(0,0,0,0.5),
+      inset 0 1px 0 rgba(255,255,255,0.35),
+      inset 0 -1px 0 rgba(0,0,0,0.2);
+    border: 1px solid #2a6aaa;
+    transition: all 0.12s;
+    position: relative;
+  }
+
+  .tab:active {
+    transform: scale(0.96);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.5), inset 0 1px 3px rgba(0,0,0,0.3);
+  }
+
+  .tab.active {
+    background: linear-gradient(180deg, #5a9dd4 0%, #3a7cc0 50%, #2a60a8 51%, #3a7cc8 100%);
+    box-shadow:
+      0 1px 3px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.2),
+      inset 0 2px 4px rgba(0,0,0,0.25);
+  }
+
+  .tab-icon {
+    display: none;
+  }
+
+  .tab-label {
+    font-family: 'Libre Baskerville', serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    letter-spacing: 0.2px;
+  }
+
+  /* MAIN CONTENT */
+  .content {
+    padding: 16px 16px 90px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Market items */
+  .market-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 16px;
+    border-bottom: 1px dashed rgba(139,110,60,0.15);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .market-item:last-child { border-bottom: none; }
+
+  .market-item:active { background: rgba(139,110,60,0.06); }
+
+  .market-item.bought { opacity: 0.45; }
+
+  .market-check {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 2px solid rgba(139,110,60,0.3);
+    background: var(--paper);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.08);
+    transition: all 0.2s;
+  }
+
+  .market-item.bought .market-check {
+    background: linear-gradient(135deg, #6ab87a, #3d7a4d);
+    border-color: #2d6a3d;
+    color: white;
+  }
+
+  .market-name {
+    font-family: 'Caveat', cursive;
+    font-size: 17px;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+
+  .market-item.bought .market-name {
+    text-decoration: line-through;
+    color: var(--ink-faded);
+  }
+
+  .market-qty {
+    font-size: 11px;
+    color: var(--ink-faded);
+    font-style: italic;
+    margin-top: 1px;
+  }
+
+  /* Day progress strip */
+  .day-strip {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 18px;
+    background: rgba(139,110,60,0.08);
+    border-radius: 12px;
+    padding: 10px 12px;
+    border: 1px solid rgba(139,110,60,0.15);
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+  }
+
+  .day-dot {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .day-dot-label {
+    font-family: 'Caveat', cursive;
+    font-size: 11px;
+    color: var(--ink-faded);
+  }
+
+  .day-dot-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(139,110,60,0.25);
+    background: var(--paper);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.08);
+    transition: all 0.2s;
+  }
+
+  .day-dot-circle.done {
+    background: linear-gradient(135deg, #5a9c6a, #3d7a4d);
+    border-color: #2d6a3d;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 4px rgba(45,106,61,0.3);
+  }
+
+  .day-dot-circle.today {
+    border-color: var(--green);
+    border-width: 2px;
+    background: rgba(74,124,89,0.1);
+  }
+
+  /* Section label — handwritten style */
+  .section-label {
+    font-family: 'Caveat', cursive;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink-light);
+    margin-bottom: 12px;
+    padding-left: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(139,110,60,0.3), transparent);
+  }
+
+  /* MEAL CARD — recipe card style */
+  .meal-card {
+    background: #faf6ec;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    position: relative;
+    box-shadow:
+      0 2px 6px rgba(0,0,0,0.12),
+      0 1px 2px rgba(0,0,0,0.08),
+      inset 0 1px 0 rgba(255,255,255,0.8);
+    border: 1px solid rgba(139,110,60,0.2);
+    overflow: hidden;
+    transition: transform 0.15s, box-shadow 0.15s;
+    cursor: pointer;
+  }
+
+  .meal-card:active {
+    transform: scale(0.98);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+  }
+
+  /* Torn paper edge left */
+  .meal-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, #5a9c6a, #3d7a4d, #5a9c6a);
+  }
+
+  .meal-card.done::before {
+    background: linear-gradient(180deg, #7dc87d, #4a9c5a, #7dc87d);
+  }
+
+  .meal-card.done {
+    opacity: 0.75;
+  }
+
+  .meal-card-inner {
+    padding: 12px 14px 12px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .meal-time-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 44px;
+  }
+
+  .meal-time {
+    font-family: 'Caveat', cursive;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--green-dark);
+    line-height: 1;
+  }
+
+  .meal-period {
+    font-family: 'Caveat', cursive;
+    font-size: 11px;
+    color: var(--ink-faded);
+  }
+
+  .meal-divider {
+    width: 1px;
+    height: 40px;
+    background: linear-gradient(180deg, transparent, rgba(139,110,60,0.2), transparent);
+  }
+
+  .meal-info {
+    flex: 1;
+  }
+
+  .meal-name {
+    font-family: 'Caveat', cursive;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.1;
+    margin-bottom: 2px;
+  }
+
+  .meal-desc {
+    font-size: 11px;
+    color: var(--ink-faded);
+    font-style: italic;
+    line-height: 1.3;
+  }
+
+  .meal-kcal {
+    font-family: 'Caveat', cursive;
+    font-size: 13px;
+    color: var(--green);
+    margin-top: 3px;
+  }
+
+  .meal-check {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid rgba(139,110,60,0.25);
+    background: var(--paper);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1), 0 1px 0 rgba(255,255,255,0.8);
+    font-size: 16px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .meal-check.checked {
+    background: linear-gradient(135deg, #6ab87a, #3d7a4d);
+    border-color: #2d6a3d;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 2px 4px rgba(45,106,61,0.35);
+  }
+
+  /* Calorie summary card */
+  .summary-card {
+    background: linear-gradient(135deg, #f0ede0, #e8e4d4);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 18px;
+    border: 1px solid rgba(139,110,60,0.2);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.7);
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Handwritten underline decoration */
+  .summary-card::after {
+    content: '';
+    position: absolute;
+    bottom: 8px;
+    left: 16px;
+    right: 16px;
+    height: 1px;
+    background: repeating-linear-gradient(90deg, rgba(139,110,60,0.2) 0px, rgba(139,110,60,0.2) 6px, transparent 6px, transparent 10px);
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+  }
+
+  .summary-title {
+    font-family: 'Caveat', cursive;
+    font-size: 14px;
+    color: var(--ink-faded);
+  }
+
+  .summary-value {
+    font-family: 'Caveat', cursive;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .summary-value span {
+    font-size: 13px;
+    font-weight: 400;
+    color: var(--ink-faded);
+  }
+
+  .progress-bar-wrap {
+    background: rgba(139,110,60,0.12);
+    border-radius: 20px;
+    height: 10px;
+    overflow: hidden;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.15);
+    margin-top: 4px;
+    margin-bottom: 14px;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 20px;
+    background: linear-gradient(90deg, #5a9c6a, #7dc87d);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.3);
+    transition: width 0.5s ease;
+  }
+
+  /* TIP card — post-it style */
+  .tip-card {
+    background: linear-gradient(135deg, #fffde7, #fff9c4);
+    border-radius: 6px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(200,180,60,0.3);
+    box-shadow: 2px 3px 8px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.8);
+    position: relative;
+    transform: rotate(-0.5deg);
+  }
+
+  .tip-card::before {
+    content: '📌';
+    position: absolute;
+    top: -8px;
+    left: 12px;
+    font-size: 18px;
+  }
+
+  .tip-text {
+    font-family: 'Caveat', cursive;
+    font-size: 15px;
+    color: #5a4a10;
+    line-height: 1.4;
+    padding-top: 4px;
+  }
+
+  /* MODAL — recipe detail */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(30,20,10,0.6);
+    z-index: 200;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    width: 100%;
+    max-width: 430px;
+    max-height: 85vh;
+    background: #faf6ec;
+    border-radius: 16px 16px 0 0;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.25);
+    border-top: 3px solid var(--green);
+    /* lined paper inside modal */
+    background-image: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 27px,
+      rgba(139,110,60,0.08) 27px,
+      rgba(139,110,60,0.08) 28px
+    );
+    background-color: #faf6ec;
+  }
+
+  .modal-overlay.open .modal {
+    transform: translateY(0);
+  }
+
+  .modal-handle {
+    width: 40px;
+    height: 4px;
+    background: rgba(139,110,60,0.25);
+    border-radius: 2px;
+    margin: 12px auto 0;
+  }
+
+  .modal-header {
+    padding: 16px 20px 12px;
+    border-bottom: 1px dashed rgba(139,110,60,0.25);
+  }
+
+  .modal-meal-name {
+    font-family: 'Caveat', cursive;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.1;
+  }
+
+  .modal-meta {
+    font-family: 'Caveat', cursive;
+    font-size: 14px;
+    color: var(--ink-faded);
+    margin-top: 4px;
+  }
+
+  .modal-body {
+    padding: 16px 20px 30px;
+  }
+
+  .ingredients-title {
+    font-family: 'Caveat', cursive;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--green-dark);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .ingredient-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px dotted rgba(139,110,60,0.15);
+  }
+
+  .ingredient-bullet {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+
+  .ingredient-text {
+    font-family: 'Caveat', cursive;
+    font-size: 16px;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+
+  .ingredient-measure {
+    color: var(--green-dark);
+    font-weight: 600;
+  }
+
+  .steps-title {
+    font-family: 'Caveat', cursive;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--green-dark);
+    margin-top: 18px;
+    margin-bottom: 10px;
+  }
+
+  .step-item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 1px dashed rgba(139,110,60,0.15);
+  }
+
+  .step-number {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #5a9c6a, #3d7a4d);
+    color: white;
+    font-family: 'Caveat', cursive;
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(45,90,61,0.3);
+    margin-top: 2px;
+  }
+
+  .step-text {
+    font-family: 'Caveat', cursive;
+    font-size: 16px;
+    color: var(--ink);
+    line-height: 1.45;
+  }
+
+  .modal-done-btn {
+    display: block;
+    width: calc(100% - 40px);
+    margin: 10px 20px 0;
+    padding: 14px;
+    background: linear-gradient(180deg, #5a9c6a, #3a7a4a);
+    color: #f5f0d0;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Caveat', cursive;
+    font-size: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(45,90,61,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+    letter-spacing: 0.3px;
+    transition: all 0.15s;
+  }
+
+  .modal-done-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 4px rgba(45,90,61,0.35);
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(139,110,60,0.12);
+    border: none;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-faded);
+  }
+
+  /* Screens */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* Fade in animation */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .meal-card { animation: fadeUp 0.3s ease both; }
+  .meal-card:nth-child(1) { animation-delay: 0.05s; }
+  .meal-card:nth-child(2) { animation-delay: 0.1s; }
+  .meal-card:nth-child(3) { animation-delay: 0.15s; }
+  .meal-card:nth-child(4) { animation-delay: 0.2s; }
+  .meal-card:nth-child(5) { animation-delay: 0.25s; }
+</style>
+</head>
+<body>
+<div class="device">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="spirals">
+      <div class="spiral"></div>
+      <div class="spiral"></div>
+      <div class="spiral"></div>
+      <div class="spiral"></div>
+      <div class="spiral"></div>
+      <div class="spiral"></div>
+      <div class="spiral"></div>
+      <div class="spiral"></div>
+      <div class="spiral"></div>
+      <div class="spiral"></div>
+      <div class="spiral"></div>
+      <div class="spiral"></div>
+    </div>
+    <div class="header-content">
+      <div>
+        <div class="app-title">YouDiet 🥗</div>
+        <div class="app-subtitle">tu recetario personal</div>
+      </div>
+      <div style="text-align:right">
+        <div class="header-date">Mayo 2026</div>
+        <div class="streak-badge">🔥 Día 1</div>
+      </div>
+    </div>
+  </div>
+  <div class="header-spacer"></div>
+
+  <!-- SCREEN: INICIO -->
+  <div class="screen active" id="screen-home">
+    <div class="content">
+
+      <!-- Day strip -->
+      <div class="day-strip">
+        <div class="day-dot">
+          <div class="day-dot-label">L</div>
+          <div class="day-dot-circle done">✓</div>
+        </div>
+        <div class="day-dot">
+          <div class="day-dot-label">M</div>
+          <div class="day-dot-circle done">✓</div>
+        </div>
+        <div class="day-dot">
+          <div class="day-dot-label">X</div>
+          <div class="day-dot-circle done">✓</div>
+        </div>
+        <div class="day-dot">
+          <div class="day-dot-label">J</div>
+          <div class="day-dot-circle today"></div>
+        </div>
+        <div class="day-dot">
+          <div class="day-dot-label">V</div>
+          <div class="day-dot-circle"></div>
+        </div>
+        <div class="day-dot">
+          <div class="day-dot-label">S</div>
+          <div class="day-dot-circle"></div>
+        </div>
+        <div class="day-dot">
+          <div class="day-dot-label">D</div>
+          <div class="day-dot-circle"></div>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="summary-card">
+        <div class="summary-row">
+          <div class="summary-title">Calorías de hoy</div>
+          <div class="summary-value" id="kcal-count">600 <span>/ 2.530 kcal</span></div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill" id="kcal-bar" style="width: 24%"></div>
+        </div>
+        <div class="summary-row" style="margin-bottom:0">
+          <div class="summary-title">Proteína</div>
+          <div style="font-family:'Caveat',cursive; font-size:15px; color:var(--green-dark)">28 <span style="font-size:12px;color:var(--ink-faded)">/ 137g</span></div>
+        </div>
+      </div>
+
+      <!-- Tip -->
+      <div class="tip-card">
+        <div class="tip-text">💡 Toma al menos 2 vasos de agua antes del almuerzo. Ayuda a la absorción de nutrientes.</div>
+      </div>
+
+      <!-- Meals -->
+      <div class="section-label">🍽️ Comidas de hoy</div>
+
+      <div class="meal-card done" onclick="openMeal(0)">
+        <div class="meal-card-inner">
+          <div class="meal-time-block">
+            <div class="meal-time">7:00</div>
+            <div class="meal-period">AM</div>
+          </div>
+          <div class="meal-divider"></div>
+          <div class="meal-info">
+            <div class="meal-name">Desayuno</div>
+            <div class="meal-desc">Avena con leche, huevos y arepa</div>
+            <div class="meal-kcal">~600 kcal · 28g prot</div>
+          </div>
+          <div class="meal-check checked" id="check-0">✓</div>
+        </div>
+      </div>
+
+      <div class="meal-card" onclick="openMeal(1)">
+        <div class="meal-card-inner">
+          <div class="meal-time-block">
+            <div class="meal-time">10:00</div>
+            <div class="meal-period">AM</div>
+          </div>
+          <div class="meal-divider"></div>
+          <div class="meal-info">
+            <div class="meal-name">Merienda mañana</div>
+            <div class="meal-desc">Yogur, banano y maní</div>
+            <div class="meal-kcal">~350 kcal · 12g prot</div>
+          </div>
+          <div class="meal-check" id="check-1"></div>
+        </div>
+      </div>
+
+      <div class="meal-card" onclick="openMeal(2)">
+        <div class="meal-card-inner">
+          <div class="meal-time-block">
+            <div class="meal-time">12:30</div>
+            <div class="meal-period">PM</div>
+          </div>
+          <div class="meal-divider"></div>
+          <div class="meal-info">
+            <div class="meal-name">Almuerzo</div>
+            <div class="meal-desc">Proteína + arroz + legumbre + ensalada</div>
+            <div class="meal-kcal">~750 kcal · 45g prot</div>
+          </div>
+          <div class="meal-check" id="check-2"></div>
+        </div>
+      </div>
+
+      <div class="meal-card" onclick="openMeal(3)">
+        <div class="meal-card-inner">
+          <div class="meal-time-block">
+            <div class="meal-time">4:00</div>
+            <div class="meal-period">PM</div>
+          </div>
+          <div class="meal-divider"></div>
+          <div class="meal-info">
+            <div class="meal-name">Merienda tarde</div>
+            <div class="meal-desc">Pan integral, atún o huevo, leche</div>
+            <div class="meal-kcal">~380 kcal · 22g prot</div>
+          </div>
+          <div class="meal-check" id="check-3"></div>
+        </div>
+      </div>
+
+      <div class="meal-card" onclick="openMeal(4)">
+        <div class="meal-card-inner">
+          <div class="meal-time-block">
+            <div class="meal-time">7:00</div>
+            <div class="meal-period">PM</div>
+          </div>
+          <div class="meal-divider"></div>
+          <div class="meal-info">
+            <div class="meal-name">Cena</div>
+            <div class="meal-desc">Caldo casero, pollo y arroz</div>
+            <div class="meal-kcal">~450 kcal · 30g prot</div>
+          </div>
+          <div class="meal-check" id="check-4"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SCREEN: MERCADO -->
+  <div class="screen" id="screen-mercado">
+    <div class="content">
+      <div class="section-label">🛒 Lista de mercado semanal</div>
+      <div class="tip-card" style="transform:rotate(0.3deg)">
+        <div class="tip-text">📌 Esto te alcanza para toda la semana. Compra de una sola vez y ahorra.</div>
+      </div>
+
+      <!-- Categoría: Proteínas -->
+      <div style="margin-bottom:14px">
+        <div style="font-family:'Caveat',cursive; font-size:16px; font-weight:700; color:var(--green-dark); margin-bottom:8px; padding-left:4px;">🥩 Proteínas</div>
+        <div style="background:#faf6ec; border-radius:8px; border:1px solid rgba(139,110,60,0.2); overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.08);" id="list-proteinas">
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Huevos</div>
+              <div class="market-qty">21 unidades — 3 por día</div>
+            </div>
+          </div>
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Pechuga o muslo de pollo</div>
+              <div class="market-qty">~700g — para almuerzo y cena</div>
+            </div>
+          </div>
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Carne de res (pulpa o molida)</div>
+              <div class="market-qty">~300g — 2 días a la semana</div>
+            </div>
+          </div>
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Atún en agua (lata)</div>
+              <div class="market-qty">3 latas — meriendas y cenas</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categoría: Lácteos -->
+      <div style="margin-bottom:14px">
+        <div style="font-family:'Caveat',cursive; font-size:16px; font-weight:700; color:var(--green-dark); margin-bottom:8px; padding-left:4px;">🥛 Lácteos</div>
+        <div style="background:#faf6ec; border-radius:8px; border:1px solid rgba(139,110,60,0.2); overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Leche entera</div>
+              <div class="market-qty">2 litros — desayuno y merienda tarde</div>
+            </div>
+          </div>
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Yogur natural entero</div>
+              <div class="market-qty">7 vasos — 1 por día en merienda mañana</div>
+            </div>
+          </div>
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Kumis (opcional)</div>
+              <div class="market-qty">Para variar con la leche en merienda tarde</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categoría: Carbohidratos -->
+      <div style="margin-bottom:14px">
+        <div style="font-family:'Caveat',cursive; font-size:16px; font-weight:700; color:var(--green-dark); margin-bottom:8px; padding-left:4px;">🍚 Carbohidratos</div>
+        <div style="background:#faf6ec; border-radius:8px; border:1px solid rgba(139,110,60,0.2); overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Arroz blanco</div>
+              <div class="market-qty">1 kilo — alcanza toda la semana</div>
+            </div>
+          </div>
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Arepas de maíz</div>
+              <div class="market-qty">7 unidades — 1 por desayuno</div>
+            </div>
+          </div>
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Pan integral</div>
+              <div class="market-qty">1 paquete — merienda tarde</div>
+            </div>
+          </div>
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Papa o yuca</div>
+              <div class="market-qty">½ kilo — acompañante del almuerzo</div>
+            </div>
+          </div>
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Avena en hojuelas</div>
+              <div class="market-qty">1 paquete pequeño — desayuno diario</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categoría: Legumbres -->
+      <div style="margin-bottom:14px">
+        <div style="font-family:'Caveat',cursive; font-size:16px; font-weight:700; color:var(--green-dark); margin-bottom:8px; padding-left:4px;">🫘 Legumbres</div>
+        <div style="background:#faf6ec; border-radius:8px; border:1px solid rgba(139,110,60,0.2); overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Frijoles o lentejas</div>
+              <div class="market-qty">½ kilo — para mezclar con el arroz</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categoría: Frutas y verduras -->
+      <div style="margin-bottom:14px">
+        <div style="font-family:'Caveat',cursive; font-size:16px; font-weight:700; color:var(--green-dark); margin-bottom:8px; padding-left:4px;">🥑 Frutas y verduras</div>
+        <div style="background:#faf6ec; border-radius:8px; border:1px solid rgba(139,110,60,0.2); overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Aguacate</div>
+              <div class="market-qty">3 unidades — desayuno y cena</div>
+            </div>
+          </div>
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Bananos</div>
+              <div class="market-qty">7 unidades — 1 por día</div>
+            </div>
+          </div>
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Zanahoria, tomate, cebolla</div>
+              <div class="market-qty">Para ensaladas y caldos</div>
+            </div>
+          </div>
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Plátano maduro</div>
+              <div class="market-qty">2 unidades — variación del almuerzo</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Categoría: Extras -->
+      <div style="margin-bottom:14px">
+        <div style="font-family:'Caveat',cursive; font-size:16px; font-weight:700; color:var(--green-dark); margin-bottom:8px; padding-left:4px;">🧂 Extras y condimentos</div>
+        <div style="background:#faf6ec; border-radius:8px; border:1px solid rgba(139,110,60,0.2); overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.08);">
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Maní tostado sin sal</div>
+              <div class="market-qty">1 bolsa — merienda mañana toda la semana</div>
+            </div>
+          </div>
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Aceite vegetal o de girasol</div>
+              <div class="market-qty">1 botella pequeña</div>
+            </div>
+          </div>
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Sal, comino, ajo en polvo</div>
+              <div class="market-qty">Si no tienes en casa</div>
+            </div>
+          </div>
+          <div class="market-item" onclick="toggleItem(this)">
+            <div class="market-check"></div>
+            <div class="market-text">
+              <div class="market-name">Limones</div>
+              <div class="market-qty">Para las ensaladas y el agua</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tip-card" style="transform:rotate(-0.4deg); margin-bottom:20px">
+        <div class="tip-text">💰 Presupuesto estimado: entre $60.000 y $80.000 pesos semanales dependiendo del mercado.</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- SCREEN: PROGRESO -->
+  <div class="screen" id="screen-progress">
+    <div class="content">
+      <div class="section-label">📈 Tu progreso</div>
+      <div class="summary-card">
+        <div class="summary-row">
+          <div class="summary-title">Peso actual</div>
+          <div class="summary-value">50 <span>kg</span></div>
+        </div>
+        <div class="summary-row">
+          <div class="summary-title">Meta</div>
+          <div class="summary-value" style="color:var(--green-dark)">58 <span>kg</span></div>
+        </div>
+        <div class="progress-bar-wrap" style="margin-top:10px">
+          <div class="progress-bar-fill" style="width: 0%"></div>
+        </div>
+      </div>
+      <div class="tip-card" style="transform:rotate(-0.3deg)">
+        <div class="tip-text">🎯 Meta: ganar 0.3–0.5 kg por semana comiendo bien y durmiendo tus 7–8 horas.</div>
+      </div>
+      <div class="section-label">📅 Esta semana</div>
+      <div style="background:#faf6ec; border-radius:8px; border:1px solid rgba(139,110,60,0.2); overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.1)">
+        <div style="display:flex; padding:10px 16px; border-bottom:1px dashed rgba(139,110,60,0.2); justify-content:space-between; align-items:center">
+          <div style="font-family:'Caveat',cursive; font-size:16px; color:var(--ink)">Lunes</div>
+          <div style="font-family:'Caveat',cursive; font-size:14px; color:var(--green)">5/5 comidas ✓</div>
+        </div>
+        <div style="display:flex; padding:10px 16px; border-bottom:1px dashed rgba(139,110,60,0.2); justify-content:space-between">
+          <div style="font-family:'Caveat',cursive; font-size:16px; color:var(--ink)">Martes</div>
+          <div style="font-family:'Caveat',cursive; font-size:14px; color:var(--green)">5/5 comidas ✓</div>
+        </div>
+        <div style="display:flex; padding:10px 16px; border-bottom:1px dashed rgba(139,110,60,0.2); justify-content:space-between">
+          <div style="font-family:'Caveat',cursive; font-size:16px; color:var(--ink)">Miércoles</div>
+          <div style="font-family:'Caveat',cursive; font-size:14px; color:var(--green)">5/5 comidas ✓</div>
+        </div>
+        <div style="display:flex; padding:10px 16px; justify-content:space-between">
+          <div style="font-family:'Caveat',cursive; font-size:16px; color:var(--ink)">Hoy — Jueves</div>
+          <div style="font-family:'Caveat',cursive; font-size:14px; color:var(--ink-faded)">1/5 comidas</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB BAR -->
+  <div class="tab-bar">
+    <div class="tab active" onclick="switchTab('home', this)">
+      <div class="tab-label">Hoy</div>
+    </div>
+    <div class="tab" onclick="switchTab('mercado', this)">
+      <div class="tab-label">Mercado</div>
+    </div>
+    <div class="tab" onclick="switchTab('progress', this)">
+      <div class="tab-label">Progreso</div>
+    </div>
+  </div>
+
+</div><!-- /device -->
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <button class="modal-close" onclick="closeModalDirect()">✕</button>
+    <div class="modal-header">
+      <div class="modal-meal-name" id="modal-title"></div>
+      <div class="modal-meta" id="modal-meta"></div>
+    </div>
+    <div class="modal-body">
+      <div class="ingredients-title">🛒 Qué necesitas</div>
+      <div id="modal-ingredients"></div>
+      <div class="steps-title">👨‍🍳 Cómo hacerlo</div>
+      <div id="modal-steps"></div>
+    </div>
+    <button class="modal-done-btn" id="modal-done-btn" onclick="markDone()">✓ Ya lo comí</button>
+  </div>
+</div>
+
+<script>
+const meals = [
+  {
+    name: "Desayuno completo",
+    meta: "7:00 AM · ~600 kcal · 28g proteína",
+    ingredients: [
+      { amount: "3", unit: "", item: "huevos", note: "al gusto: revueltos o fritos" },
+      { amount: "1 vaso", unit: "", item: "leche entera", note: "" },
+      { amount: "4 cucharas", unit: "colmadas de", item: "avena en hojuelas", note: "" },
+      { amount: "1", unit: "", item: "arepa mediana", note: "ya hecha o de paquete" },
+      { amount: "½", unit: "", item: "aguacate", note: "en rodajas" },
+      { amount: "1", unit: "", item: "banano maduro", note: "" },
+    ],
+    steps: [
+      "Pon el vaso de leche en una olla pequeña a fuego medio. Cuando empiece a humear (antes de hervir), agrega las 4 cucharadas de avena y revuelve con una cuchara.",
+      "Sigue revolviendo por unos 5 minutos hasta que la avena espese como un puré suave. Apaga y agrega el banano en rodajas encima.",
+      "En otro pocillo o sartén, calienta un chorrito de aceite y fríe los 3 huevos. Si no sabes freírlos, simplemente bátelos y revuélvelos como si fueran para tacos — quedan igual de ricos.",
+      "Calienta la arepa en el fogón o en el microondas 1 minuto. Sírvela con los huevos encima y el aguacate al lado en rodajas.",
+    ]
+  },
+  {
+    name: "Merienda mañana",
+    meta: "10:00 AM · ~350 kcal · 12g proteína",
+    ingredients: [
+      { amount: "1 vaso", unit: "", item: "yogur natural entero", note: "el de caja, no de botella" },
+      { amount: "1", unit: "", item: "banano o mango", note: "el que haya" },
+      { amount: "2 cucharas", unit: "de", item: "maní tostado sin sal", note: "el de bolsita barato" },
+    ],
+    steps: [
+      "Sirve el yogur en un vaso o pocillo. No necesitas más utensilios.",
+      "Pela y pica el banano o mango en rodajas o cubitos y échalo encima del yogur.",
+      "Agrega las dos cucharadas de maní encima. Listo — come con cuchara o simplemente mezcla todo.",
+    ]
+  },
+  {
+    name: "Almuerzo",
+    meta: "12:30 PM · ~750 kcal · 45g proteína",
+    ingredients: [
+      { amount: "1 presa", unit: "grande de", item: "pollo, carne o pescado", note: "rota cada día" },
+      { amount: "1 vaso", unit: "de", item: "arroz crudo", note: "rinde 2 vasos cocido" },
+      { amount: "½ vaso", unit: "de", item: "frijoles o lentejas cocidas", note: "de lata o hervidas" },
+      { amount: "1 papa", unit: "mediana o", item: "plátano maduro", note: "" },
+      { amount: "1 puñado", unit: "de", item: "zanahoria, tomate o remolacha", note: "lo que haya" },
+    ],
+    steps: [
+      "Para el arroz: pon 2 vasos de agua a hervir con una pizca de sal. Cuando hierva, agrega 1 vaso de arroz crudo, tapa y baja el fuego al mínimo. Espera 18 minutos sin abrir. Apaga y listo.",
+      "Mientras el arroz se hace, pon la papa en agua fría, enciende el fogón y deja hervir 20 minutos hasta que un tenedor entre fácil.",
+      "Para el pollo: ponlo en un sartén con un chorrito de aceite a fuego medio-alto. Agrega sal, ajo en polvo y comino. Deja 6 minutos por un lado sin moverlo, voltea y 6 minutos más.",
+      "Si usas carne de res: igual que el pollo pero con 4 minutos por lado para que quede jugosa. Si usas pescado: 3 minutos por lado es suficiente.",
+      "Sirve todo en el plato: el arroz mezclado con los frijoles, la papa al lado y la carne encima. La ensalada la picas y la pones al lado con sal y limón.",
+    ]
+  },
+  {
+    name: "Merienda tarde",
+    meta: "4:00 PM · ~380 kcal · 22g proteína",
+    ingredients: [
+      { amount: "2 tajadas", unit: "de", item: "pan integral", note: "o 1 arepa pequeña" },
+      { amount: "1 lata", unit: "de", item: "atún en agua", note: "o 2 huevos duros" },
+      { amount: "1 vaso", unit: "de", item: "leche entera o kumis", note: "" },
+    ],
+    steps: [
+      "Si vas con atún: abre la lata, escúrrele el agua apretándola con la tapa, y ponlo sobre el pan directamente. Sin más.",
+      "Si vas con huevos duros: ponlos en agua fría, enciende el fogón, cuando hierva cuenta 10 minutos, apaga y mételos en agua fría para pelarlos fácil. Córtalos y ponlos sobre el pan.",
+      "Sirve el vaso de leche o kumis frío al lado. Come despacio — este snack reemplaza la gaseosa o el mecato de las 4.",
+    ]
+  },
+  {
+    name: "Cena",
+    meta: "7:00 PM · ~450 kcal · 30g proteína",
+    ingredients: [
+      { amount: "1 presa", unit: "de", item: "pollo o atún", note: "lo que sobró del almuerzo sirve" },
+      { amount: "½ vaso", unit: "de", item: "arroz cocido", note: "también puede ser del almuerzo" },
+      { amount: "2 vasos", unit: "de", item: "agua o caldo de verduras", note: "con sal, cebolla y zanahoria" },
+      { amount: "½", unit: "", item: "aguacate", note: "si no lo usaste en el desayuno" },
+    ],
+    steps: [
+      "Para el caldo: pon 2 vasos de agua a hervir con sal, media cebolla en trozos y una zanahoria partida. Deja 10 minutos y ya tienes un caldo casero básico.",
+      "Desmenuza el pollo con las manos o con tenedor — jala en tiras. Si es atún, abre la lata. Agrégalo al caldo caliente.",
+      "Sirve el arroz en el plato, vierte el caldo con el pollo encima y pon el aguacate al lado. La cena no necesita ser complicada — solo nutritiva.",
+    ]
+  },
+];
+
+let currentMeal = null;
+const checked = [true, false, false, false, false];
+const kcalArr = [600, 350, 750, 380, 450];
+const protArr = [28, 12, 45, 22, 30];
+
+function updateSummary() {
+  let totalKcal = 0, totalProt = 0;
+  checked.forEach((c, i) => { if (c) { totalKcal += kcalArr[i]; totalProt += protArr[i]; } });
+  document.getElementById('kcal-count').innerHTML = `${totalKcal.toLocaleString('es')} <span>/ 2.530 kcal</span>`;
+  document.getElementById('kcal-bar').style.width = Math.min(100, Math.round(totalKcal / 25.3)) + '%';
+}
+
+function openMeal(index) {
+  currentMeal = index;
+  const m = meals[index];
+  document.getElementById('modal-title').textContent = m.name;
+  document.getElementById('modal-meta').textContent = m.meta;
+
+  let ingHTML = '';
+  m.ingredients.forEach(ing => {
+    ingHTML += `<div class="ingredient-item">
+      <div class="ingredient-bullet"></div>
+      <div class="ingredient-text"><span class="ingredient-measure">${ing.amount} ${ing.unit}</span> ${ing.item}${ing.note ? ' <span style="color:var(--ink-faded);font-size:13px">— ${ing.note}</span>' : ''}</div>
+    </div>`;
+  });
+  document.getElementById('modal-ingredients').innerHTML = ingHTML;
+
+  let stepsHTML = '';
+  m.steps.forEach((s, i) => {
+    stepsHTML += `<div class="step-item">
+      <div class="step-number">${i+1}</div>
+      <div class="step-text">${s}</div>
+    </div>`;
+  });
+  document.getElementById('modal-steps').innerHTML = stepsHTML;
+
+  const btn = document.getElementById('modal-done-btn');
+  if (checked[index]) {
+    btn.textContent = '✓ Ya marcado como comido';
+    btn.style.background = 'linear-gradient(180deg, #888, #666)';
+  } else {
+    btn.textContent = '✓ Ya lo comí';
+    btn.style.background = 'linear-gradient(180deg, #5a9c6a, #3a7a4a)';
+  }
+
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModalDirect();
+}
+
+function closeModalDirect() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function markDone() {
+  if (currentMeal === null) return;
+  checked[currentMeal] = true;
+  const card = document.querySelectorAll('.meal-card')[currentMeal];
+  card.classList.add('done');
+  const check = document.getElementById('check-' + currentMeal);
+  if (check) { check.classList.add('checked'); check.textContent = '✓'; }
+  updateSummary();
+  closeModalDirect();
+}
+
+function switchTab(screen, tab) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('screen-' + screen).classList.add('active');
+  tab.classList.add('active');
+}
+
+function toggleItem(el) {
+  el.classList.toggle('bought');
+  const check = el.querySelector('.market-check');
+  if (el.classList.contains('bought')) {
+    check.textContent = '✓';
+  } else {
+    check.textContent = '';
+  }
+}
+
+updateSummary();
+</script>
+</body>
+</html>
