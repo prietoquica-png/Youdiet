@@ -1,4 +1,4 @@
-const CACHE_NAME = 'youdiet-v1';
+const CACHE_NAME = 'youdiet-v2';
 const ASSETS = [
   '/Youdiet/',
   '/Youdiet/index.html',
