@@ -2,7 +2,7 @@
   "name": "YouDiet",
   "short_name": "YouDiet",
   "description": "Tu recetario personal — ecosistema OURS",
-  "start_url": "/index.html",
+  "start_url": "/Youdiet/index.html",
   "display": "standalone",
   "background_color": "#f5f0e8",
   "theme_color": "#4a7c59",
