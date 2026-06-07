@@ -1,8 +1,8 @@
 const CACHE_NAME = 'youdiet-v1';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
+   '/Youdiet/',
+  '/Youdiet/index.html',
+  '/Youdiet/manifest.json',
   'https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap'
 ];
 
